@@ -107,67 +107,45 @@ Eventora AI bridges the gap between **generative intelligence** and **tactile pr
 
 ## 📸 Screenshots & Visual Preview
 
-> *Note: Place high-resolution application screenshots in `docs/screenshots/` with the filenames indicated below to render visual previews directly on GitHub.*
-
 ### 1. Editorial Landing Page
-```
 ![Eventora AI Landing Page](docs/screenshots/01-landing-page.png)
-```
-*A split-screen editorial landing page introducing Eventora AI with lifestyle photography, event category cards, and workflow previews.*
+*A serene, editorial split-screen landing page welcoming users with thoughtful lifestyle typography, celebration category showcases, interactive preview celebrations, and a transparent feature roadmap.*
 
 ---
 
 ### 2. Event Blueprint Generator (`/create`)
-```
-[ Placeholder: Event Creation Form & AI Engine Indicator ]
-File target: docs/screenshots/02-create-event.png
-```
-*Interactive celebration setup form with real-time Gemini backend health detection, INR budget sliders, and style preferences.*
+![Event Creation](docs/screenshots/02-create-event.png)
+*Interactive celebration setup interface featuring real-time Google Gemini backend connectivity detection, INR budget sliders, guest volume parameters, and cultural aesthetic preferences.*
 
 ---
 
 ### 3. Celebration Dashboard (`/dashboard`)
-```
-[ Placeholder: Readiness Score, Days-to-Go, and Metric Overview ]
-File target: docs/screenshots/03-dashboard.png
-```
-*Unified event control room featuring the verified readiness score, days-to-go countdown, budget utilization bars, and upcoming milestone deliverables.*
+![Event Dashboard](docs/screenshots/03-dashboard.png)
+*Centralized event control room displaying the verified Celebration Readiness Score (calculated from actual completed deliverables and secured vendors), days-to-go countdown breakdown, budget utilization gauges, and urgent priority action items.*
 
 ---
 
 ### 4. Budget Planner & Expense Log (`/budget`)
-```
-[ Placeholder: Category Allocations & Expense Table ]
-File target: docs/screenshots/04-budget-page.png
-```
-*Interactive category allocation cards formatted in Indian Rupees (`Intl.NumberFormat('en-IN')`), expense logger, and settlement tracking.*
+![Budget Planner](docs/screenshots/04-budget-page.png)
+*Dynamic category allocations in Indian Rupees (`Intl.NumberFormat('en-IN')`) with inline edit controls, full expense log with receipt tracking, paid/pending status toggles, and safe remaining balance calculations.*
 
 ---
 
 ### 5. Chronological Timeline & Tasks (`/timeline`)
-```
-[ Placeholder: Phased Deliverables Roadmap ]
-File target: docs/screenshots/05-timeline-page.png
-```
-*Chronological milestone execution roadmap grouped by phase with priority filters and past-date prevention.*
+![Timeline and Tasks](docs/screenshots/05-timeline-page.png)
+*Phased celebration roadmap sequenced from initial kickoff through day-of execution and post-event wraps, featuring smart past-date prevention, priority tags, and milestone execution progress.*
 
 ---
 
 ### 6. Vendor Checklist (`/vendors`)
-```
-[ Placeholder: Vendor Quotes & Deposit Management ]
-File target: docs/screenshots/06-vendors-page.png
-```
-*Vendor coordination directory with advance deposit tracking, contact cards, and status selectors.*
+![Vendor Checklist](docs/screenshots/06-vendors-page.png)
+*Comprehensive vendor coordination checklist tracking recommended service disciplines, estimated target quotes, recorded token deposits, contact details, and booking lifecycle statuses.*
 
 ---
 
 ### 7. Creative Ideas Synthesizer (`/ideas`)
-```
-[ Placeholder: AI Creative Concepts with "Add to Plan" ]
-File target: docs/screenshots/07-ideas-page.png
-```
-*AI-synthesized themes, decor, culinary concepts, and entertainment ideas with intelligent deadline scheduling.*
+![AI Creative Ideas](docs/screenshots/07-ideas-page.png)
+*AI-synthesized design concepts spanning themes, decor, culinary items, and entertainment. Clicking "Add to Plan" automatically schedules deliverables with appropriate pre-event preparation deadlines and duplicate protection.*
 
 ---
 
