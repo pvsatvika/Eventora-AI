@@ -111,8 +111,7 @@ Eventora AI bridges the gap between **generative intelligence** and **tactile pr
 
 ### 1. Editorial Landing Page
 ```
-[ Placeholder: Landing Page Hero & Category Showcase ]
-File target: docs/screenshots/01-landing-page.png
+![Eventora AI Landing Page](docs/screenshots/01-landing-page.png)
 ```
 *A split-screen editorial landing page introducing Eventora AI with lifestyle photography, event category cards, and workflow previews.*
 
