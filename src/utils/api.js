@@ -1,16 +1,20 @@
 /**
  * Eventora AI Backend API Client
- * Interfaces with the Python FastAPI backend on http://localhost:8000
+ * Configurable via import.meta.env.VITE_API_BASE_URL (defaults to http://localhost:8000 for local development)
  */
 
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  'http://localhost:8000'
+).replace(/\/+$/, '');
 
 export async function checkBackendHealth() {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-    const res = await fetch(`${BACKEND_BASE_URL}/api/health`, {
+    const res = await fetch(`${API_BASE_URL}/api/health`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' },
       signal: controller.signal,
@@ -49,7 +53,7 @@ export async function generateEventPlanWithAI(formData) {
     existing_completed_tasks: formData.existingCompletedTasks || null,
   };
 
-  const res = await fetch(`${BACKEND_BASE_URL}/api/generate-plan`, {
+  const res = await fetch(`${API_BASE_URL}/api/generate-plan`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -81,7 +85,7 @@ export async function generateIdeasWithAI({ event, category = 'all' }) {
     category,
   };
 
-  const res = await fetch(`${BACKEND_BASE_URL}/api/generate-ideas`, {
+  const res = await fetch(`${API_BASE_URL}/api/generate-ideas`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
