@@ -87,7 +87,7 @@ export const TaskItem = ({ task, onToggle, onDelete }) => {
 
       <button
         onClick={() => onDelete(task.id)}
-        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted hover:text-rose-700 hover:bg-rose-50 transition-all shrink-0"
+        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-lg text-muted hover:text-rose-700 hover:bg-rose-50 transition-all shrink-0"
         title="Delete deliverable"
       >
         <Trash2 className="w-4 h-4" />

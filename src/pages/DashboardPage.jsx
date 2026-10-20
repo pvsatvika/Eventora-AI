@@ -99,7 +99,7 @@ export const DashboardPage = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-6 bg-ivory/60 px-6 py-4 rounded-2xl border border-stoneborder shrink-0 text-center">
+          <div className="flex items-center justify-around gap-3 sm:gap-6 bg-ivory/60 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border border-stoneborder text-center w-full md:w-auto">
             <div>
               <span className="font-editorial text-2xl font-medium text-charcoal block">
                 {daysInfo.days}
@@ -367,9 +367,11 @@ export const DashboardPage = () => {
 
                   return (
                     <div key={cat.id} className="space-y-1.5">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-medium text-charcoal">{cat.name}</span>
-                        <div className="flex items-center gap-2">
+                      <div className="flex justify-between items-center text-xs gap-2">
+                        <span className="font-medium text-charcoal truncate" title={cat.name}>
+                          {cat.name}
+                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0 text-right">
                           <span className="text-muted">Spent: {formatINR(catSpent)}</span>
                           <span className="font-semibold text-charcoal">
                             / {formatINR(cat.allocated)}

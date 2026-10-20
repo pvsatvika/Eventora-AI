@@ -8,12 +8,13 @@ import {
 } from 'lucide-react';
 import { useEvents } from '../context/EventContext';
 import { EventBanner } from '../components/layout/EventBanner';
-import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { IdeaCard } from '../components/ideas/IdeaCard';
 import { AddIdeaModal } from '../components/ideas/AddIdeaModal';
 import { EmptyState } from '../components/common/EmptyState';
+import { Toast } from '../components/common/Toast';
 import { generateIdeasWithAI } from '../utils/api';
+import { calculateIdeaDeliverableDetails } from '../utils/date';
 
 export const IdeasPage = () => {
   const { activeEvent, toggleIdeaFavorite, addCustomIdea, addTask } = useEvents();
@@ -22,6 +23,13 @@ export const IdeasPage = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [ideasNotice, setIdeasNotice] = useState(null);
+  const [toast, setToast] = useState({
+    isOpen: false,
+    message: '',
+    type: 'success',
+    actionLabel: '',
+    actionPath: '',
+  });
 
   if (!activeEvent) return null;
 
@@ -50,15 +58,46 @@ export const IdeasPage = () => {
   };
 
   const handleAddTaskFromIdea = (idea) => {
+    const taskTitle = `Plan: ${idea.title}`;
+    const currentTasks = activeEvent.timelineTasks || [];
+    const isAlreadyAdded = currentTasks.some(
+      (t) =>
+        t.title.toLowerCase().trim() === taskTitle.toLowerCase().trim() ||
+        t.title.toLowerCase().trim() === idea.title.toLowerCase().trim()
+    );
+
+    if (isAlreadyAdded) {
+      setToast({
+        isOpen: true,
+        message: `"${idea.title}" is already in your Event Deliverables.`,
+        type: 'info',
+        actionLabel: 'View in Timeline',
+        actionPath: '/timeline',
+      });
+      return;
+    }
+
+    const { dueDate, phase, priority, category } = calculateIdeaDeliverableDetails(
+      idea,
+      activeEvent.date
+    );
+
     addTask(activeEvent.id, {
-      title: `Plan: ${idea.title}`,
-      phase: '1-2 Months Before',
-      category: idea.tag || 'Aesthetic Concept',
-      priority: 'medium',
-      dueDate: activeEvent.date,
+      title: taskTitle,
+      phase,
+      category,
+      priority,
+      dueDate,
       notes: idea.description,
     });
-    alert(`Added "${idea.title}" to your Event Timeline Deliverables.`);
+
+    setToast({
+      isOpen: true,
+      message: `Added "${idea.title}" to your plan (Target: ${dueDate}, Phase: ${phase}).`,
+      type: 'success',
+      actionLabel: 'View in Timeline',
+      actionPath: '/timeline',
+    });
   };
 
   const handleRegenerate = async () => {
@@ -225,14 +264,25 @@ export const IdeasPage = () => {
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredIdeas.map((idea) => (
-              <IdeaCard
-                key={idea.id}
-                idea={idea}
-                onToggleFavorite={handleToggleFavorite}
-                onAddTaskFromIdea={handleAddTaskFromIdea}
-              />
-            ))}
+            {filteredIdeas.map((idea) => {
+              const currentTasks = activeEvent.timelineTasks || [];
+              const taskTitleLower = `plan: ${idea.title.toLowerCase().trim()}`;
+              const isAdded = currentTasks.some(
+                (t) =>
+                  t.title.toLowerCase().trim() === taskTitleLower ||
+                  t.title.toLowerCase().trim() === idea.title.toLowerCase().trim()
+              );
+
+              return (
+                <IdeaCard
+                  key={idea.id}
+                  idea={idea}
+                  isAdded={isAdded}
+                  onToggleFavorite={handleToggleFavorite}
+                  onAddTaskFromIdea={handleAddTaskFromIdea}
+                />
+              );
+            })}
           </div>
         )}
       </div>
@@ -242,6 +292,16 @@ export const IdeasPage = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddIdea={handleAddCustomIdea}
+      />
+
+      {/* Tasteful Non-Blocking Success Toast */}
+      <Toast
+        isOpen={toast.isOpen}
+        message={toast.message}
+        type={toast.type}
+        actionLabel={toast.actionLabel}
+        actionPath={toast.actionPath}
+        onClose={() => setToast((prev) => ({ ...prev, isOpen: false }))}
       />
     </div>
   );

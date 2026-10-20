@@ -8,7 +8,12 @@ import {
 import { Card } from '../common/Card';
 import { Badge } from '../common/Badge';
 
-export const IdeaCard = ({ idea, onToggleFavorite, onAddTaskFromIdea }) => {
+export const IdeaCard = ({
+  idea,
+  onToggleFavorite,
+  onAddTaskFromIdea,
+  isAdded = false,
+}) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -88,11 +93,25 @@ export const IdeaCard = ({ idea, onToggleFavorite, onAddTaskFromIdea }) => {
           {onAddTaskFromIdea && (
             <button
               onClick={() => onAddTaskFromIdea(idea)}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg text-sage-900 bg-sage-100/70 hover:bg-sage-200/70 transition-colors"
-              title="Add to Event Deliverables"
+              disabled={isAdded}
+              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                isAdded
+                  ? 'bg-sage-100 text-sage-900 border border-sage-300/80 cursor-default font-semibold'
+                  : 'text-sage-900 bg-sage-100/70 hover:bg-sage-200/80'
+              }`}
+              title={isAdded ? 'Already added to timeline' : 'Add to Event Deliverables'}
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add to Plan</span>
+              {isAdded ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-sage-700" />
+                  <span>In Plan</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add to Plan</span>
+                </>
+              )}
             </button>
           )}
         </div>

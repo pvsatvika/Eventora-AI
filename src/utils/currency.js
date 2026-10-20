@@ -62,7 +62,7 @@ export const formatCompactINR = (amount) => {
   if (num >= 1000) {
     return `${sign}₹${(num / 1000).toFixed(1).replace(/\.0$/, '')} K`;
   }
-  return `${sign}₹${num}`;
+  return formatINR(numeric);
 };
 
 /**
