@@ -12,8 +12,8 @@ from services.gemini_service import (
 
 def test_get_api_key_valid():
     """Returns valid key when non-placeholder string is provided."""
-    with patch("os.getenv", return_value="AIzaSyValidKey12345"):
-        assert get_api_key() == "AIzaSyValidKey12345"
+    with patch("os.getenv", return_value="valid_synthetic_api_key_12345"):
+        assert get_api_key() == "valid_synthetic_api_key_12345"
 
 
 def test_get_api_key_detects_placeholders():
@@ -85,7 +85,7 @@ def test_gemini_service_generate_plan_mocked(mock_gemini_plan_data):
     mock_response.text = json.dumps(mock_gemini_plan_data)
     mock_client.models.generate_content.return_value = mock_response
 
-    with patch("services.gemini_service.get_api_key", return_value="AIzaSyMockKey"), \
+    with patch("services.gemini_service.get_api_key", return_value="mock_synthetic_api_key"), \
          patch("services.gemini_service.genai.Client", return_value=mock_client):
         plan = GeminiService.generate_event_plan(req_plan)
 
@@ -126,7 +126,7 @@ def test_gemini_service_generate_ideas_mocked():
     mock_response.text = json.dumps(sample_ideas)
     mock_client.models.generate_content.return_value = mock_response
 
-    with patch("services.gemini_service.get_api_key", return_value="AIzaSyMockKey"), \
+    with patch("services.gemini_service.get_api_key", return_value="mock_synthetic_api_key"), \
          patch("services.gemini_service.genai.Client", return_value=mock_client):
         ideas = GeminiService.generate_creative_ideas(req_ideas)
         assert len(ideas) == 1
@@ -165,7 +165,7 @@ def test_gemini_service_empty_text_raises_502():
     mock_response.text = ""
     mock_client.models.generate_content.return_value = mock_response
 
-    with patch("services.gemini_service.get_api_key", return_value="AIzaSyMockKey"), \
+    with patch("services.gemini_service.get_api_key", return_value="mock_synthetic_api_key"), \
          patch("services.gemini_service.genai.Client", return_value=mock_client):
         with pytest.raises(HTTPException) as exc_info:
             GeminiService.generate_event_plan(req_plan)
@@ -188,7 +188,7 @@ def test_gemini_service_malformed_json_raises_502():
     mock_response.text = "This is not valid JSON at all!"
     mock_client.models.generate_content.return_value = mock_response
 
-    with patch("services.gemini_service.get_api_key", return_value="AIzaSyMockKey"), \
+    with patch("services.gemini_service.get_api_key", return_value="mock_synthetic_api_key"), \
          patch("services.gemini_service.genai.Client", return_value=mock_client):
         with pytest.raises(HTTPException) as exc_info:
             GeminiService.generate_event_plan(req_plan)
@@ -222,7 +222,7 @@ def test_gemini_service_api_error_subtypes():
             response_json={"error": {"message": err_msg, "code": expected_status}},
         )
 
-        with patch("services.gemini_service.get_api_key", return_value="AIzaSyMockKey"), \
+        with patch("services.gemini_service.get_api_key", return_value="mock_synthetic_api_key"), \
              patch("services.gemini_service.genai.Client", return_value=mock_client):
             with pytest.raises(HTTPException) as exc_info:
                 GeminiService.generate_event_plan(req_plan)
@@ -233,13 +233,24 @@ def test_sanitize_error_message_redacts_secrets():
     """sanitize_error_message redacts Google API keys and sensitive query parameters."""
     from services.gemini_service import sanitize_error_message
 
-    raw_err = "Request failed for URL https://generativelanguage.googleapis.com/v1beta/models?key=AIzaSyA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q"
-    sanitized = sanitize_error_message(raw_err)
-    assert "AIzaSyA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q" not in sanitized
-    assert "[REDACTED" in sanitized
+    # 1. Query-parameter credential redaction (e.g. ?key=... or &key=...)
+    query_err = "Request failed for URL https://generativelanguage.googleapis.com/v1beta/models?key=synthetic_secret_token_12345&alt=json"
+    sanitized_query = sanitize_error_message(query_err)
+    assert "synthetic_secret_token_12345" not in sanitized_query
+    assert "key=[REDACTED]" in sanitized_query
 
-    # Empty string handling
+    # 2. Google API key shape redaction (verifies the regex without committing a static key token)
+    # Dynamically compose a synthetic token matching the 39-character AIza shape (AIza + 35 characters)
+    synthetic_google_key = "AIza" + ("test_synthetic_token_payload_padding"[:35])
+    assert len(synthetic_google_key) == 39
+    header_err = f"API error with token {synthetic_google_key} in error response"
+    sanitized_header = sanitize_error_message(header_err)
+    assert synthetic_google_key not in sanitized_header
+    assert "[REDACTED_API_KEY]" in sanitized_header
+
+    # 3. Empty and None string handling
     assert sanitize_error_message("") == "An unknown error occurred."
+    assert sanitize_error_message(None) == "An unknown error occurred."
 
 
 

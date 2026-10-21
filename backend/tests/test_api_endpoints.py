@@ -20,7 +20,7 @@ def test_post_generate_plan_valid(client, mock_gemini_plan_data):
     mock_resp.text = json.dumps(mock_gemini_plan_data)
     mock_client.models.generate_content.return_value = mock_resp
 
-    with patch("services.gemini_service.get_api_key", return_value="AIzaSyMockKey"), \
+    with patch("services.gemini_service.get_api_key", return_value="mock_synthetic_api_key"), \
          patch("services.gemini_service.genai.Client", return_value=mock_client):
         response = client.post("/api/generate-plan", json=payload)
         assert response.status_code == 200
@@ -100,7 +100,7 @@ def test_post_generate_ideas_valid(client):
     mock_resp.text = json.dumps(mock_ideas)
     mock_client.models.generate_content.return_value = mock_resp
 
-    with patch("services.gemini_service.get_api_key", return_value="AIzaSyMockKey"), \
+    with patch("services.gemini_service.get_api_key", return_value="mock_synthetic_api_key"), \
          patch("services.gemini_service.genai.Client", return_value=mock_client):
         response = client.post("/api/generate-ideas", json=payload)
         assert response.status_code == 200

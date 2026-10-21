@@ -774,7 +774,7 @@ export const CreateEventPage = () => {
               Open <code className="bg-white px-1.5 py-0.5 rounded border border-stoneborder text-charcoal">backend/.env</code> and replace <code className="text-charcoal">YOUR_API_KEY_HERE</code> with your key:
             </p>
             <pre className="p-2.5 bg-charcoal text-ivory rounded-lg text-[11px] overflow-x-auto">
-GEMINI_API_KEY=AIzaSy...
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 GEMINI_MODEL=gemini-2.5-flash
             </pre>
           </div>
