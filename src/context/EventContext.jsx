@@ -292,8 +292,6 @@ export const EventProvider = ({ children }) => {
           contactPerson: '',
           phone: '',
           email: '',
-          estimatedCost: 0,
-          depositPaid: 0,
           notes: '',
           ...vendorData,
           estimatedCost: Number(vendorData.estimatedCost) || 0,

@@ -9,7 +9,7 @@ export const AddExpenseModal = ({
   categories = [],
   onAddExpense,
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     title: '',
     categoryId: categories[0]?.id || '',
     amount: '',
@@ -17,7 +17,7 @@ export const AddExpenseModal = ({
     vendorName: '',
     date: new Date().toISOString().split('T')[0],
     notes: '',
-  });
+  }));
 
   const [errors, setErrors] = useState({});
 

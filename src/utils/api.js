@@ -31,7 +31,7 @@ export async function checkBackendHealth() {
       geminiConfigured: Boolean(data.gemini_configured),
       model: data.model || 'gemini-2.5-flash',
     };
-  } catch (err) {
+  } catch {
     return {
       ok: false,
       geminiConfigured: false,

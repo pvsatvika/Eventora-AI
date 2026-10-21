@@ -2,24 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import {
-  Calendar,
   MapPin,
-  Coins,
-  Users,
-  Palette,
-  ArrowRight,
   Check,
-  CheckCircle2,
   Sparkles,
   AlertCircle,
-  HelpCircle,
-  Cpu,
   RefreshCw,
 } from 'lucide-react';
 import { useEvents } from '../context/EventContext';
 import { Button } from '../components/common/Button';
-import { Card } from '../components/common/Card';
-import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { formatINR } from '../utils/currency';
 import { getFutureDateString } from '../utils/date';
@@ -204,7 +194,7 @@ export const CreateEventPage = () => {
         origin: { y: 0.6 },
         colors: ['#748C78', '#526B57', '#E9C9C3', '#FAF8F4'],
       });
-    } catch (err) {
+    } catch {
       // graceful fallback
     }
   };

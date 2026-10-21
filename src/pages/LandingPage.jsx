@@ -2,11 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
-  Calendar,
   Check,
   Coins,
   Clock,
-  Users2,
   Sparkles,
 } from 'lucide-react';
 import { Button } from '../components/common/Button';

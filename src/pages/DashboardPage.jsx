@@ -1,16 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  PieChart,
-  Clock,
-  Users2,
-  Lightbulb,
-  ArrowRight,
-  Calendar,
-  Coins,
-  MapPin,
-  Check,
-} from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useEvents } from '../context/EventContext';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';

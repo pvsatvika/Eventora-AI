@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export const Footer = () => {
   return (
     <footer className="bg-white border-t border-stoneborder mt-24 py-16 text-charcoal">
@@ -98,7 +100,7 @@ export const Footer = () => {
 
         {/* Bottom Credits */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-muted gap-4">
-          <p>© {new Date().getFullYear()} Eventora. All rights reserved.</p>
+          <p>© {CURRENT_YEAR} Eventora. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <span>Hack2Skill PromptWars Challenge 5</span>
             <span>•</span>

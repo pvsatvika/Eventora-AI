@@ -13,7 +13,6 @@ import {
 import { useEvents } from '../context/EventContext';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
-import { Badge } from '../components/common/Badge';
 import { formatINR } from '../utils/currency';
 import { formatDate, getDaysUntil } from '../utils/date';
 

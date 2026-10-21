@@ -55,10 +55,16 @@ export const calculateIdeaDeliverableDetails = (idea, eventDateStr) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const eventDt = new Date(eventDateStr);
+  let eventDt;
+  if (typeof eventDateStr === 'string' && eventDateStr.includes('-')) {
+    const parts = eventDateStr.split('T')[0].split('-').map(Number);
+    eventDt = new Date(parts[0], parts[1] - 1, parts[2]);
+  } else {
+    eventDt = new Date(eventDateStr);
+  }
   eventDt.setHours(0, 0, 0, 0);
 
-  const daysRemaining = Math.max(0, Math.ceil((eventDt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+  const daysRemaining = Math.max(0, Math.round((eventDt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
 
   const type = (idea.type || '').toLowerCase();
   const tag = (idea.tag || '').toLowerCase();
@@ -90,7 +96,10 @@ export const calculateIdeaDeliverableDetails = (idea, eventDateStr) => {
     targetDt = new Date(today);
   }
 
-  const dueDateStr = targetDt.toISOString().split('T')[0];
+  const y = targetDt.getFullYear();
+  const m = String(targetDt.getMonth() + 1).padStart(2, '0');
+  const d = String(targetDt.getDate()).padStart(2, '0');
+  const dueDateStr = `${y}-${m}-${d}`;
   const actualDaysBefore = Math.round((eventDt.getTime() - targetDt.getTime()) / (1000 * 60 * 60 * 24));
 
   let phase = '1-2 Weeks Before';

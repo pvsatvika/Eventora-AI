@@ -6,18 +6,9 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Card } from '../common/Card';
-import { Badge } from '../common/Badge';
 import { formatINR } from '../../utils/currency';
 
 export const VendorCard = ({ vendor, onUpdateStatus, onDelete }) => {
-  const statusConfig = {
-    'Booked': { variant: 'success', label: 'Booked' },
-    'Deposit Paid': { variant: 'primary', label: 'Deposit Paid' },
-    'Contacted': { variant: 'blush', label: 'Contacted' },
-    'Researching': { variant: 'warning', label: 'Researching' },
-    'Not Started': { variant: 'neutral', label: 'Not Started' },
-  };
-
   const statusOptions = [
     'Not Started',
     'Researching',

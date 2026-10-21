@@ -49,6 +49,7 @@ An editorial celebration planning platform and operating system powered by **Goo
   - [Frontend on Vercel](#frontend-on-vercel)
   - [Backend on Render](#backend-on-render)
 - [Suggested Demo Walkthrough](#-suggested-demo-walkthrough)
+- [Testing & Quality Assurance](#-testing--quality-assurance)
 - [Limitations & Future Roadmap](#-limitations--future-roadmap)
 - [Hackathon Attribution](#-hackathon-attribution)
 - [License & Intellectual Property](#-license--intellectual-property)
@@ -510,6 +511,182 @@ Judges and evaluators can follow this step-by-step walkthrough to test the full 
 8. **Event Manager (`/events`)**:
    - Navigate to **Celebrations** in the top navigation.
    - Switch between sample events or manage saved celebrations stored in `localStorage`.
+
+---
+
+## 🧪 Testing & Quality Assurance
+
+Eventora AI includes an automated full-stack testing suite covering the Python FastAPI backend, Gemini generative AI services, frontend utilities, React state management, and UI components.
+
+### 🧰 Testing Frameworks & Tools
+
+- **Backend Testing**: **pytest** (`>=9.1.1`) paired with FastAPI's **TestClient** (`httpx`) and `unittest.mock` for zero-cost offline Gemini simulation.
+- **Frontend Testing**: **Vitest** (`^5.0.5`), **React Testing Library** (`^16.3.3`), and **jsdom** (`^30.1.3`).
+- **Static Analysis & Linting**: **oxlint** (`^1.88.0`) for fast Rust-based code-quality verification.
+- **Production Bundling**: **Vite** (`^8.3.4`) validating TypeScript and React compilation integrity.
+
+---
+
+### 💻 Test Execution Commands
+
+#### Run Frontend Test Suite
+From the repository root:
+```bash
+# Run all Vitest unit and integration tests
+npm run test
+
+# Run tests in interactive watch mode
+npx vitest
+```
+
+#### Run Backend Test Suite
+From the repository root (or within `backend/`):
+```bash
+# Run all pytest backend tests with verbose output
+python -m pytest backend/tests -v
+
+# Run with test coverage (optional)
+python -m pytest backend/tests --tb=short
+```
+
+#### Run Code Quality & Linter
+```bash
+npm run lint
+```
+
+#### Run Production Build Verification
+```bash
+npm run build
+```
+
+---
+
+### 📋 Test Coverage Breakdown
+
+#### 1. Backend Automated Tests (`backend/tests/` — 26 Tests)
+- **API Health & Configuration (`test_health.py`)**:
+  - `GET /api/health` returns status code 200 and schema with model, status, and version.
+  - Accurate detection when Gemini API key is configured vs unconfigured.
+- **Input Validation & Schemas (`test_schemas.py`)**:
+  - `EventPlanRequest` parameter parsing and defaults.
+  - Strict YYYY-MM-DD date regex validation and automatic whitespace trimming.
+  - Rejection of invalid event types (restricts strictly to `wedding`, `birthday`, `community`).
+  - Strict budget boundaries (validates ₹5,000 minimum up to ₹50,00,00,000 maximum).
+  - Guest count bounds checking (1 to 10,000 attendees).
+  - Pydantic sub-schemas for Gemini structured outputs (`BudgetCategoryGemini`, `TimelineTaskGemini`, `VendorChecklistGemini`, `CreativeIdeaGemini`).
+- **Timeline Date Normalization (`test_timeline_normalization.py`)**:
+  - Chronological ordering of generated milestones.
+  - **Past-Date Prevention**: Milestones that would fall in the past relative to the current server date are rescheduled to upcoming actionable dates between today and the event date, marked with `priority: high` and overdue action notices.
+  - **Post-Event Milestones**: Tasks with negative offsets (e.g. vendor settlements, album delivery) are scheduled after the event date with `phase: Post Event`.
+  - **State Preservation**: Completed task states (`completed: true`) are preserved across plan regenerations.
+- **Gemini Service & Security (`test_gemini_service.py`)**:
+  - `get_api_key()` detects and neutralizes placeholder keys (`YOUR_API_KEY_HERE`, `PLACEHOLDER`, empty strings) without leaking secrets.
+  - `GeminiService.generate_event_plan()` raises HTTP 503 when unconfigured.
+  - Offline Mock Gemini execution parses structured JSON and ensures category allocations sum exactly to 100% of the requested budget.
+  - `GeminiService.generate_creative_ideas()` parses tailored concepts.
+- **REST Endpoints & Integration (`test_api_endpoints.py`)**:
+  - `POST /api/generate-plan` returns 200 with complete celebration payload.
+  - `POST /api/generate-plan` returns 422 Unprocessable Entity on missing or invalid parameters.
+  - `POST /api/generate-ideas` returns 200 with categorized ideas.
+  - CORS preflight `OPTIONS` headers validation.
+
+#### 2. Frontend Automated Tests (`src/test/` — 40 Tests)
+- **Currency Utilities (`src/test/currency.test.js`)**:
+  - Standard Indian numbering formatting (`₹15,00,000`).
+  - Zero formatting sanitization guaranteeing clean `₹0` without HTML entities (`&#x30;`).
+  - String number coercion and negative balance handling.
+  - Compact summaries across Thousands (`K`), Lakhs (`Lakh`), and Crores (`Cr`).
+  - `parseINRInput` parsing formatted strings back to integers.
+- **Date & Scheduling Utilities (`src/test/date.test.js`)**:
+  - `formatDate` readable string formatting and invalid date fallback (`TBD`).
+  - `getDaysUntil` calculations, past date detection, and countdown labels.
+  - `calculateIdeaDeliverableDetails`:
+    - 30-day preparation offset for Theme & Aesthetic concepts.
+    - 21-day offset for Entertainment & Music concepts.
+    - 14-day offset for Decor, Styling, and Culinary concepts.
+    - Proportional runway compression for short-notice events.
+    - Same-day deadline assignment (`Day of Event`) without past dates.
+    - Local timezone accuracy without UTC date drift.
+- **EventContext & Persistence (`src/test/EventContext.test.jsx`)**:
+  - Initial state hydration from `localStorage`.
+  - Event creation (`createNewEvent`) and active celebration switching.
+  - Category budget allocation adjustments (`updateBudgetCategory`).
+  - Expense lifecycle (`addExpense`, `updateExpense` paid/pending toggles, `deleteExpense`).
+  - Timeline deliverables management (`toggleTask`, `addTask`).
+  - Vendor checklist lifecycle (`updateVendor` booking status changes, `addVendor`).
+  - Creative concept bookmarking (`toggleIdeaFavorite`, `addCustomIdea`).
+- **UI & Domain Components (`src/test/components.test.jsx`)**:
+  - `Toast`: accessible status notification, action links, auto-dismiss, and manual dismiss handlers.
+  - `ProgressBar`: percentage width calculation and bounds clamping.
+  - `Badge`: botanical and editorial variant token styling.
+  - `TaskItem`: deliverable rendering, strikethrough styling upon completion, priority tags, and toggle/delete interactions.
+  - `BudgetCategoryCard`: allocated vs spent displays, inline edit mode toggle, numeric inputs, and save/cancel actions.
+  - `VendorCard`: booking status selection dropdown, contact info display, and status update callbacks.
+  - `IdeaCard`: concept title, copy-to-clipboard, "Add to Plan" callback, "In Plan" disabled state, and favorite bookmark toggle.
+- **Frontend API Client (`src/test/api.test.js`)**:
+  - Sanitization of `API_BASE_URL` ensuring no trailing slashes.
+  - `checkBackendHealth` handling both connected 200 states and offline error fallbacks.
+  - `generateEventPlanWithAI` payload construction and descriptive error propagation.
+  - `generateIdeasWithAI` parameter passing and response parsing.
+
+---
+
+### 📊 Actual Test Results
+
+```text
+============================= pytest backend test session =============================
+platform win32 -- Python 3.14.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: C:\Users\admin\Desktop\Eventora-AI
+collected 26 items
+
+backend/tests/test_api_endpoints.py::test_post_generate_plan_valid PASSED            [  3%]
+backend/tests/test_api_endpoints.py::test_post_generate_plan_invalid_input PASSED   [  7%]
+backend/tests/test_api_endpoints.py::test_post_generate_plan_unconfigured_gemini PASSED [ 11%]
+backend/tests/test_api_endpoints.py::test_post_generate_ideas_valid PASSED          [ 15%]
+backend/tests/test_api_endpoints.py::test_cors_headers_present PASSED               [ 19%]
+backend/tests/test_gemini_service.py::test_get_api_key_valid PASSED                 [ 23%]
+backend/tests/test_gemini_service.py::test_get_api_key_detects_placeholders PASSED  [ 26%]
+backend/tests/test_gemini_service.py::test_get_model_name_default PASSED            [ 30%]
+backend/tests/test_gemini_service.py::test_gemini_service_raises_503_when_unconfigured PASSED [ 34%]
+backend/tests/test_gemini_service.py::test_gemini_service_generate_plan_mocked PASSED [ 38%]
+backend/tests/test_gemini_service.py::test_gemini_service_generate_ideas_mocked PASSED [ 42%]
+backend/tests/test_health.py::test_health_check_returns_200 PASSED                  [ 46%]
+backend/tests/test_health.py::test_health_check_configured_state PASSED             [ 50%]
+backend/tests/test_health.py::test_health_check_unconfigured_state PASSED           [ 53%]
+backend/tests/test_schemas.py::test_valid_event_plan_request PASSED                 [ 57%]
+backend/tests/test_schemas.py::test_invalid_event_type_rejected PASSED              [ 61%]
+backend/tests/test_schemas.py::test_invalid_date_format_rejected PASSED             [ 65%]
+backend/tests/test_schemas.py::test_date_validator_strips_whitespace PASSED        [ 69%]
+backend/tests/test_schemas.py::test_budget_boundary_validation PASSED               [ 73%]
+backend/tests/test_schemas.py::test_guest_count_boundary_validation PASSED          [ 76%]
+backend/tests/test_schemas.py::test_generate_ideas_request PASSED                   [ 80%]
+backend/tests/test_schemas.py::test_gemini_component_schemas PASSED                 [ 84%]
+backend/tests/test_timeline_normalization.py::test_normalize_normal_future_tasks PASSED [ 88%]
+backend/tests/test_timeline_normalization.py::test_normalize_reschedules_past_milestones PASSED [ 92%]
+backend/tests/test_timeline_normalization.py::test_normalize_post_event_tasks PASSED [ 96%]
+backend/tests/test_timeline_normalization.py::test_normalize_preserves_completed_tasks PASSED [100%]
+
+================================= 26 passed in 0.32s ==================================
+
+----------------------------------------------------------------------------------------
+
+ RUN  v5.0.5 C:/Users/admin/Desktop/Eventora-AI
+
+ ✓ src/test/currency.test.js (8 tests) 10ms
+ ✓ src/test/date.test.js (11 tests) 51ms
+ ✓ src/test/api.test.js (6 tests) 16ms
+ ✓ src/test/EventContext.test.jsx (7 tests) 43ms
+ ✓ src/test/components.test.jsx (8 tests) 280ms
+
+ Test Files  5 passed (5)
+      Tests  40 passed (40)
+   Duration  2.92s
+
+----------------------------------------------------------------------------------------
+TOTAL AUTOMATED TESTS: 66 PASSED / 0 FAILED (100% Pass Rate)
+LINT STATUS: 0 Errors
+BUILD STATUS: 0 Errors (built in 1.50s)
+```
 
 ---
 

@@ -13,7 +13,6 @@ import {
   Plus,
 } from 'lucide-react';
 import { useEvents } from '../../context/EventContext';
-import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
 import { formatINR } from '../../utils/currency';
 import { formatDate, getDaysUntil } from '../../utils/date';

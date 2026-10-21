@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import {
-  Coins,
   Plus,
   AlertCircle,
-  PieChart,
 } from 'lucide-react';
 import { useEvents } from '../context/EventContext';
 import { EventBanner } from '../components/layout/EventBanner';
