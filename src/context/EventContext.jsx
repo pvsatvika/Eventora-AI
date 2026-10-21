@@ -380,6 +380,7 @@ export const EventProvider = ({ children }) => {
   );
 };
 
+// oxlint-disable-next-line react/only-export-components
 export const useEvents = () => {
   const context = useContext(EventContext);
   if (!context) {

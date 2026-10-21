@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Literal
-from datetime import date as dt_date
+from datetime import datetime, date as dt_date
 import re
 
 
@@ -27,20 +27,28 @@ class EventPlanRequest(BaseModel):
     @field_validator("event_date")
     @classmethod
     def validate_date(cls, v: str) -> str:
+        s = v.strip()
         # Check basic YYYY-MM-DD structure
-        if not re.match(r"^\d{4}-\d{2}-\d{2}$", v.strip()):
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", s):
             raise ValueError("Event date must follow the YYYY-MM-DD format.")
-        return v.strip()
+        # Ensure it is a valid calendar date (handles month days, leap years)
+        try:
+            parsed = datetime.strptime(s, "%Y-%m-%d").date()
+        except ValueError:
+            raise ValueError("Event date is not a valid calendar date.")
+        if parsed.year < 2024 or parsed.year > 2099:
+            raise ValueError("Event date year must be between 2024 and 2099.")
+        return s
 
 
 class GenerateIdeasRequest(BaseModel):
-    event_name: str = Field(..., description="Name of the celebration")
-    event_type: str = Field(..., description="Type of event (wedding, birthday, community)")
-    theme: Optional[str] = Field(None, description="Current theme or aesthetic vision")
-    guest_count: Optional[int] = Field(100, description="Guest count")
-    total_budget: Optional[float] = Field(500000, description="Budget in INR")
-    location: Optional[str] = Field("India", description="City or venue location")
-    category: Optional[str] = Field("all", description="Specific category filter (all, theme, decor, food, entertainment)")
+    event_name: str = Field(..., min_length=2, max_length=120, description="Name of the celebration")
+    event_type: str = Field(..., min_length=2, max_length=50, description="Type of event (wedding, birthday, community)")
+    theme: Optional[str] = Field(None, max_length=250, description="Current theme or aesthetic vision")
+    guest_count: Optional[int] = Field(100, ge=1, le=10000, description="Guest count")
+    total_budget: Optional[float] = Field(500000, ge=5000, le=500000000, description="Budget in INR")
+    location: Optional[str] = Field("India", max_length=120, description="City or venue location")
+    category: Optional[str] = Field("all", max_length=50, description="Specific category filter (all, theme, decor, food, entertainment)")
 
 
 # -------------------------------------------------------------------------

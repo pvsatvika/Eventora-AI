@@ -32,7 +32,8 @@ export const TaskItem = ({ task, onToggle, onDelete }) => {
       <div className="flex items-start gap-3.5 flex-1 min-w-0">
         <button
           onClick={() => onToggle(task.id)}
-          className="mt-0.5 text-muted hover:text-sage-800 transition-colors shrink-0"
+          aria-label={isCompleted ? `Mark "${task.title}" as incomplete` : `Mark "${task.title}" as complete`}
+          className="mt-0.5 text-muted hover:text-sage-800 transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-sage-600 focus-visible:outline-none rounded"
         >
           {isCompleted ? (
             <CheckCircle2 className="w-5 h-5 text-sage-700 fill-sage-50" />
@@ -87,7 +88,8 @@ export const TaskItem = ({ task, onToggle, onDelete }) => {
 
       <button
         onClick={() => onDelete(task.id)}
-        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-lg text-muted hover:text-rose-700 hover:bg-rose-50 transition-all shrink-0"
+        aria-label={`Delete deliverable "${task.title}"`}
+        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-lg text-muted hover:text-rose-700 hover:bg-rose-50 transition-all shrink-0 focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none"
         title="Delete deliverable"
       >
         <Trash2 className="w-4 h-4" />

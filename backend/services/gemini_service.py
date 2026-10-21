@@ -1,6 +1,7 @@
 import os
+import re
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
@@ -48,6 +49,37 @@ PALETTE_COLORS = [
     "#69716B",  # Muted Slate
     "#3D5041",  # Deep Olive
 ]
+
+
+def extract_clean_json(text: str) -> str:
+    """
+    Safely extract JSON text from Gemini responses, stripping markdown code fences
+    (e.g., ```json ... ```) and leading/trailing non-JSON whitespace.
+    """
+    if not text:
+        return ""
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        lines = cleaned.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        cleaned = "\n".join(lines).strip()
+    return cleaned
+
+
+def sanitize_error_message(msg: str) -> str:
+    """
+    Ensure no raw API keys, bearer tokens, or query strings leak in error messages.
+    """
+    if not msg:
+        return "An unknown error occurred."
+    # Redact any Google API keys (AIzaSy...)
+    msg = re.sub(r"AIza[0-9A-Za-z_-]{35}", "[REDACTED_API_KEY]", msg)
+    # Redact any ?key=... query parameters
+    msg = re.sub(r"key=[^&\s'\"]+", "key=[REDACTED]", msg)
+    return msg
 
 
 def get_api_key() -> Optional[str]:
@@ -322,8 +354,15 @@ Generate high-quality, practical, culturally resonant results matching the reque
                     detail="Gemini API returned an empty response. Please try again.",
                 )
 
-            # Parse and validate with Pydantic
-            raw_data = GeminiPlanOutputSchema.model_validate_json(response.text)
+            # Clean and validate with Pydantic
+            cleaned_text = extract_clean_json(response.text)
+            try:
+                raw_data = GeminiPlanOutputSchema.model_validate_json(cleaned_text)
+            except Exception as e:
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"Gemini API returned an invalid response format: {str(e)}",
+                )
 
         except APIError as e:
             error_message = str(e)
@@ -343,16 +382,18 @@ Generate high-quality, practical, culturally resonant results matching the reque
                     detail=f"The configured Gemini model '{model_name}' was not found or is unavailable for your API key. Check GEMINI_MODEL in backend/.env.",
                 )
             else:
+                raw_err = e.message if hasattr(e, 'message') else error_message
+                code_label = e.code if hasattr(e, 'code') else 'Unknown'
                 raise HTTPException(
                     status_code=502,
-                    detail=f"Gemini API error ({e.code if hasattr(e, 'code') else 'Unknown'}): {e.message if hasattr(e, 'message') else error_message}",
+                    detail=f"Gemini API error ({code_label}): {sanitize_error_message(raw_err)}",
                 )
         except HTTPException:
             raise
         except Exception as e:
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to process AI event plan: {str(e)}",
+                detail=f"Failed to process AI event plan: {sanitize_error_message(str(e))}",
             )
 
         # -----------------------------------------------------------------
@@ -445,7 +486,7 @@ Generate high-quality, practical, culturally resonant results matching the reque
             "expectedGuests": request.guest_count,
             "theme": request.theme_preferences or "Modern Celebration",
             "specialRequirements": request.special_requirements or "None specified.",
-            "createdAt": datetime.utcnow().isoformat() + "Z",
+            "createdAt": datetime.now(timezone.utc).isoformat(),
             "isGeneratedByAI": True,
             "aiModelLabel": f"Google Gemini ({model_name})",
             "aiOverview": {
@@ -504,7 +545,14 @@ Requirements:
                     detail="Gemini API returned an empty response.",
                 )
 
-            raw_data = GeminiIdeasOutputSchema.model_validate_json(response.text)
+            cleaned_text = extract_clean_json(response.text)
+            try:
+                raw_data = GeminiIdeasOutputSchema.model_validate_json(cleaned_text)
+            except Exception as e:
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"Gemini API returned an invalid ideas response format: {str(e)}",
+                )
 
             now_ts = int(time.time() * 1000)
             formatted_ideas = []
@@ -538,12 +586,12 @@ Requirements:
             else:
                 raise HTTPException(
                     status_code=502,
-                    detail=f"Gemini API error: {error_message}",
+                    detail=f"Gemini API error: {sanitize_error_message(error_message)}",
                 )
         except HTTPException:
             raise
         except Exception as e:
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to generate ideas: {str(e)}",
+                detail=f"Failed to generate ideas: {sanitize_error_message(str(e))}",
             )

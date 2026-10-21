@@ -27,19 +27,25 @@ app = FastAPI(
     version="1.0.0",
 )
 
+import logging
+
+logger = logging.getLogger("eventora_backend")
+
 # -------------------------------------------------------------------------
 # CORS Configuration
 # -------------------------------------------------------------------------
 cors_env = os.getenv(
     "CORS_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173",
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,https://eventora-ai-ten.vercel.app",
 )
 allowed_origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+allow_creds = "*" not in allowed_origins
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins if allowed_origins else ["*"],
-    allow_credentials=True,
+    allow_origins=allowed_origins if allowed_origins else ["http://localhost:5173"],
+    allow_origin_regex=r"^https:\/\/eventora-ai(-[a-zA-Z0-9_-]+)?\.vercel\.app$",
+    allow_credentials=allow_creds,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
@@ -58,9 +64,15 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception(
+        "Unhandled server exception processing %s %s: %s",
+        request.method,
+        request.url.path,
+        str(exc),
+    )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": f"An unexpected server error occurred: {str(exc)}"},
+        content={"detail": "An unexpected server error occurred. Please try again later."},
     )
 
 

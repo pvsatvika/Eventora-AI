@@ -38,7 +38,8 @@ export const VendorCard = ({ vendor, onUpdateStatus, onDelete }) => {
 
           <button
             onClick={() => onDelete(vendor.id)}
-            className="text-muted hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
+            aria-label={`Delete vendor "${vendor.name}"`}
+            className="text-muted hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none transition-colors"
             title="Delete vendor"
           >
             <Trash2 className="w-4 h-4" />
@@ -103,8 +104,10 @@ export const VendorCard = ({ vendor, onUpdateStatus, onDelete }) => {
 
       {/* Status Selector */}
       <div className="pt-2 flex items-center justify-between gap-2 border-t border-stoneborder">
-        <label className="text-xs text-muted">Booking Status:</label>
+        <label htmlFor={`vendor-status-${vendor.id}`} className="text-xs text-muted">Booking Status:</label>
         <select
+          id={`vendor-status-${vendor.id}`}
+          aria-label={`Booking status for ${vendor.name}`}
           value={vendor.status}
           onChange={(e) => onUpdateStatus(vendor.id, { status: e.target.value })}
           className="text-xs font-medium rounded-lg border border-stoneborder bg-white px-2.5 py-1 text-charcoal focus:ring-1 focus:ring-sage-600 focus:outline-none cursor-pointer"

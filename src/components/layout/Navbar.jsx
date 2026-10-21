@@ -102,7 +102,10 @@ export const Navbar = () => {
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-stoneborder bg-white hover:border-sage-400 text-left transition-colors text-xs"
+                  aria-haspopup="true"
+                  aria-expanded={dropdownOpen}
+                  aria-label={`Select active celebration. Currently ${activeEvent?.name || 'none selected'}`}
+                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-stoneborder bg-white hover:border-sage-400 text-left transition-colors text-xs focus-visible:ring-2 focus-visible:ring-sage-600 focus-visible:outline-none"
                 >
                   <span className="w-2 h-2 rounded-full bg-sage-600" />
                   <div className="max-w-[160px] truncate">
@@ -177,7 +180,9 @@ export const Navbar = () => {
           <div className="flex md:hidden items-center gap-2">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-charcoal hover:bg-white transition-colors border border-stoneborder"
+              aria-expanded={mobileMenuOpen}
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              className="p-2 rounded-xl text-charcoal hover:bg-white transition-colors border border-stoneborder focus-visible:ring-2 focus-visible:ring-sage-600 focus-visible:outline-none"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>

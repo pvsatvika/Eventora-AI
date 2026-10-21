@@ -165,3 +165,72 @@ def test_gemini_component_schemas():
         cost_impact="Budget-friendly",
     )
     assert idea.type == "decor"
+
+
+def test_invalid_calendar_dates_rejected():
+    """Valid regex but nonexistent calendar dates are rejected."""
+    bad_calendar_dates = [
+        "2027-02-31",  # February never has 31 days
+        "2027-04-31",  # April only has 30 days
+        "2027-02-29",  # 2027 is not a leap year
+        "2027-13-01",  # Month 13 does not exist
+        "2027-00-10",  # Month 0 does not exist
+        "2027-05-32",  # Day 32 does not exist
+    ]
+    for bad_date in bad_calendar_dates:
+        with pytest.raises(ValidationError):
+            EventPlanRequest(
+                event_type="wedding",
+                event_name="Celebration",
+                event_date=bad_date,
+                location="Bengaluru",
+                total_budget=1000000,
+                guest_count=100,
+            )
+
+
+def test_valid_leap_year_accepted():
+    """Leap year date (2028-02-29) is accepted cleanly."""
+    req = EventPlanRequest(
+        event_type="wedding",
+        event_name="Leap Year Celebration",
+        event_date="2028-02-29",
+        location="Bengaluru",
+        total_budget=1000000,
+        guest_count=100,
+    )
+    assert req.event_date == "2028-02-29"
+
+
+def test_year_range_validation():
+    """Dates with year outside 2024-2099 are rejected."""
+    for out_of_range in ["2020-01-01", "2105-05-15"]:
+        with pytest.raises(ValidationError):
+            EventPlanRequest(
+                event_type="wedding",
+                event_name="Celebration",
+                event_date=out_of_range,
+                location="Bengaluru",
+                total_budget=1000000,
+                guest_count=100,
+            )
+
+
+def test_generate_ideas_request_bounds():
+    """GenerateIdeasRequest validates numeric bounds and field lengths."""
+    # Negative guest count
+    with pytest.raises(ValidationError):
+        GenerateIdeasRequest(
+            event_name="Birthday Party",
+            event_type="birthday",
+            guest_count=0,
+        )
+
+    # Budget below minimum
+    with pytest.raises(ValidationError):
+        GenerateIdeasRequest(
+            event_name="Birthday Party",
+            event_type="birthday",
+            total_budget=100,
+        )
+

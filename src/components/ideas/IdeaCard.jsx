@@ -50,7 +50,8 @@ export const IdeaCard = ({
 
           <button
             onClick={() => onToggleFavorite(idea.id)}
-            className={`p-1.5 rounded-xl transition-all ${
+            aria-label={idea.favorite ? `Remove "${idea.title}" from favorites` : `Save "${idea.title}" to favorites`}
+            className={`p-1.5 rounded-xl transition-all focus-visible:ring-2 focus-visible:ring-sage-600 focus-visible:outline-none ${
               idea.favorite
                 ? 'bg-sage-100 text-sage-900'
                 : 'text-muted hover:text-charcoal hover:bg-ivory'
@@ -74,7 +75,8 @@ export const IdeaCard = ({
         <div className="flex items-center gap-2">
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg text-muted hover:text-charcoal hover:bg-ivory transition-colors border border-transparent hover:border-stoneborder"
+            aria-label={`Copy concept "${idea.title}"`}
+            className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg text-muted hover:text-charcoal hover:bg-ivory transition-colors border border-transparent hover:border-stoneborder focus-visible:ring-2 focus-visible:ring-sage-600 focus-visible:outline-none"
             title="Copy concept"
           >
             {copied ? (
@@ -94,7 +96,8 @@ export const IdeaCard = ({
             <button
               onClick={() => onAddTaskFromIdea(idea)}
               disabled={isAdded}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+              aria-label={isAdded ? `"${idea.title}" already added to timeline` : `Add "${idea.title}" to timeline plan`}
+              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-sage-600 focus-visible:outline-none ${
                 isAdded
                   ? 'bg-sage-100 text-sage-900 border border-sage-300/80 cursor-default font-semibold'
                   : 'text-sage-900 bg-sage-100/70 hover:bg-sage-200/80'

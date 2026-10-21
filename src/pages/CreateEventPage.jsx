@@ -7,6 +7,7 @@ import {
   Sparkles,
   AlertCircle,
   RefreshCw,
+  ArrowRight,
 } from 'lucide-react';
 import { useEvents } from '../context/EventContext';
 import { Button } from '../components/common/Button';

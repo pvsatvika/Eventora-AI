@@ -131,3 +131,115 @@ def test_gemini_service_generate_ideas_mocked():
         ideas = GeminiService.generate_creative_ideas(req_ideas)
         assert len(ideas) == 1
         assert ideas[0]["title"] == "Acoustic Trio"
+
+
+def test_extract_clean_json_markdown_fences():
+    """extract_clean_json strips markdown code blocks and whitespace."""
+    from services.gemini_service import extract_clean_json
+
+    assert extract_clean_json("") == ""
+    assert extract_clean_json("   ") == ""
+
+    raw_markdown = "```json\n{\"key\": \"value\"}\n```"
+    assert extract_clean_json(raw_markdown) == "{\"key\": \"value\"}"
+
+    raw_generic_fence = "```\n{\"key\": \"value\"}\n```"
+    assert extract_clean_json(raw_generic_fence) == "{\"key\": \"value\"}"
+
+    raw_plain = "  {\"key\": \"value\"}  "
+    assert extract_clean_json(raw_plain) == "{\"key\": \"value\"}"
+
+
+def test_gemini_service_empty_text_raises_502():
+    """Empty or None response from Gemini generates a 502 Bad Gateway HTTPException."""
+    req_plan = EventPlanRequest(
+        event_type="wedding",
+        event_name="Celebration",
+        event_date="2027-04-15",
+        location="Jaipur",
+        total_budget=1800000,
+        guest_count=200,
+    )
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = ""
+    mock_client.models.generate_content.return_value = mock_response
+
+    with patch("services.gemini_service.get_api_key", return_value="AIzaSyMockKey"), \
+         patch("services.gemini_service.genai.Client", return_value=mock_client):
+        with pytest.raises(HTTPException) as exc_info:
+            GeminiService.generate_event_plan(req_plan)
+        assert exc_info.value.status_code == 502
+        assert "empty response" in exc_info.value.detail
+
+
+def test_gemini_service_malformed_json_raises_502():
+    """Malformed non-JSON output from Gemini generates a 502 Bad Gateway HTTPException."""
+    req_plan = EventPlanRequest(
+        event_type="wedding",
+        event_name="Celebration",
+        event_date="2027-04-15",
+        location="Jaipur",
+        total_budget=1800000,
+        guest_count=200,
+    )
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = "This is not valid JSON at all!"
+    mock_client.models.generate_content.return_value = mock_response
+
+    with patch("services.gemini_service.get_api_key", return_value="AIzaSyMockKey"), \
+         patch("services.gemini_service.genai.Client", return_value=mock_client):
+        with pytest.raises(HTTPException) as exc_info:
+            GeminiService.generate_event_plan(req_plan)
+        assert exc_info.value.status_code == 502
+        assert "invalid response format" in exc_info.value.detail
+
+
+def test_gemini_service_api_error_subtypes():
+    """Gemini APIError maps to appropriate status codes (401, 404, 429)."""
+    from google.genai.errors import APIError
+
+    req_plan = EventPlanRequest(
+        event_type="wedding",
+        event_name="Celebration",
+        event_date="2027-04-15",
+        location="Jaipur",
+        total_budget=1800000,
+        guest_count=200,
+    )
+
+    error_cases = [
+        ("429 RESOURCE_EXHAUSTED: quota exceeded", 429),
+        ("UNAUTHENTICATED: API_KEY_INVALID", 401),
+        ("NOT_FOUND: models/gemini-2.5-flash not found", 404),
+    ]
+
+    for err_msg, expected_status in error_cases:
+        mock_client = MagicMock()
+        mock_client.models.generate_content.side_effect = APIError(
+            code=expected_status,
+            response_json={"error": {"message": err_msg, "code": expected_status}},
+        )
+
+        with patch("services.gemini_service.get_api_key", return_value="AIzaSyMockKey"), \
+             patch("services.gemini_service.genai.Client", return_value=mock_client):
+            with pytest.raises(HTTPException) as exc_info:
+                GeminiService.generate_event_plan(req_plan)
+            assert exc_info.value.status_code == expected_status
+
+
+def test_sanitize_error_message_redacts_secrets():
+    """sanitize_error_message redacts Google API keys and sensitive query parameters."""
+    from services.gemini_service import sanitize_error_message
+
+    raw_err = "Request failed for URL https://generativelanguage.googleapis.com/v1beta/models?key=AIzaSyA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q"
+    sanitized = sanitize_error_message(raw_err)
+    assert "AIzaSyA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q" not in sanitized
+    assert "[REDACTED" in sanitized
+
+    # Empty string handling
+    assert sanitize_error_message("") == "An unknown error occurred."
+
+
+

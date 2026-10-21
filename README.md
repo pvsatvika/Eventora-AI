@@ -563,16 +563,20 @@ npm run build
 
 ### 📋 Test Coverage Breakdown
 
-#### 1. Backend Automated Tests (`backend/tests/` — 26 Tests)
+#### 1. Backend Automated Tests (`backend/tests/` — 37 Tests)
 - **API Health & Configuration (`test_health.py`)**:
   - `GET /api/health` returns status code 200 and schema with model, status, and version.
   - Accurate detection when Gemini API key is configured vs unconfigured.
 - **Input Validation & Schemas (`test_schemas.py`)**:
   - `EventPlanRequest` parameter parsing and defaults.
   - Strict YYYY-MM-DD date regex validation and automatic whitespace trimming.
+  - **Calendar Integrity**: Rejection of impossible dates (e.g., February 31, April 31, month 13, non-leap year Feb 29).
+  - **Leap Year Support**: Validates leap day dates (e.g., `2028-02-29`) cleanly.
+  - **Year Range Guard**: Restricts dates to sensible horizon (2024–2099).
   - Rejection of invalid event types (restricts strictly to `wedding`, `birthday`, `community`).
   - Strict budget boundaries (validates ₹5,000 minimum up to ₹50,00,00,000 maximum).
   - Guest count bounds checking (1 to 10,000 attendees).
+  - `GenerateIdeasRequest` bounds and field length limits.
   - Pydantic sub-schemas for Gemini structured outputs (`BudgetCategoryGemini`, `TimelineTaskGemini`, `VendorChecklistGemini`, `CreativeIdeaGemini`).
 - **Timeline Date Normalization (`test_timeline_normalization.py`)**:
   - Chronological ordering of generated milestones.
@@ -584,20 +588,24 @@ npm run build
   - `GeminiService.generate_event_plan()` raises HTTP 503 when unconfigured.
   - Offline Mock Gemini execution parses structured JSON and ensures category allocations sum exactly to 100% of the requested budget.
   - `GeminiService.generate_creative_ideas()` parses tailored concepts.
+  - **Markdown Fence Stripping**: `extract_clean_json` safely handles markdown-wrapped responses (` ```json ... ``` `).
+  - **Resilient Error Handling**: Empty text raises HTTP 502, malformed JSON raises HTTP 502, and Gemini `APIError` subtypes map accurately to HTTP 401, 404, and 429.
+  - **Secret Redaction**: `sanitize_error_message()` actively redacts Gemini API keys (`AIza...`) and query parameters (`key=...`) from external API exceptions before sending responses.
 - **REST Endpoints & Integration (`test_api_endpoints.py`)**:
   - `POST /api/generate-plan` returns 200 with complete celebration payload.
   - `POST /api/generate-plan` returns 422 Unprocessable Entity on missing or invalid parameters.
   - `POST /api/generate-ideas` returns 200 with categorized ideas.
-  - CORS preflight `OPTIONS` headers validation.
+  - **CORS Security**: Verifies local development origins, production Vercel origins (`https://eventora-ai-ten.vercel.app`), and project preview domains (`https://eventora-ai-*.vercel.app`), while strictly rejecting unrelated origins.
+  - **Information Exposure Prevention**: Verifies unhandled internal server exceptions return sanitized 500 error messages without leaking server stack traces.
 
-#### 2. Frontend Automated Tests (`src/test/` — 40 Tests)
-- **Currency Utilities (`src/test/currency.test.js`)**:
+#### 2. Frontend Automated Tests (`src/test/` — 58 Tests)
+- **Currency Utilities (`src/test/currency.test.js` — 8 tests)**:
   - Standard Indian numbering formatting (`₹15,00,000`).
-  - Zero formatting sanitization guaranteeing clean `₹0` without HTML entities (`&#x30;`).
+  - Zero formatting sanitization guaranteeing clean `₹0` without HTML entities.
   - String number coercion and negative balance handling.
   - Compact summaries across Thousands (`K`), Lakhs (`Lakh`), and Crores (`Cr`).
   - `parseINRInput` parsing formatted strings back to integers.
-- **Date & Scheduling Utilities (`src/test/date.test.js`)**:
+- **Date & Scheduling Utilities (`src/test/date.test.js` — 11 tests)**:
   - `formatDate` readable string formatting and invalid date fallback (`TBD`).
   - `getDaysUntil` calculations, past date detection, and countdown labels.
   - `calculateIdeaDeliverableDetails`:
@@ -607,7 +615,7 @@ npm run build
     - Proportional runway compression for short-notice events.
     - Same-day deadline assignment (`Day of Event`) without past dates.
     - Local timezone accuracy without UTC date drift.
-- **EventContext & Persistence (`src/test/EventContext.test.jsx`)**:
+- **EventContext & Persistence (`src/test/EventContext.test.jsx` — 7 tests)**:
   - Initial state hydration from `localStorage`.
   - Event creation (`createNewEvent`) and active celebration switching.
   - Category budget allocation adjustments (`updateBudgetCategory`).
@@ -615,15 +623,34 @@ npm run build
   - Timeline deliverables management (`toggleTask`, `addTask`).
   - Vendor checklist lifecycle (`updateVendor` booking status changes, `addVendor`).
   - Creative concept bookmarking (`toggleIdeaFavorite`, `addCustomIdea`).
-- **UI & Domain Components (`src/test/components.test.jsx`)**:
+- **UI & Domain Components (`src/test/components.test.jsx` — 8 tests)**:
   - `Toast`: accessible status notification, action links, auto-dismiss, and manual dismiss handlers.
   - `ProgressBar`: percentage width calculation and bounds clamping.
   - `Badge`: botanical and editorial variant token styling.
-  - `TaskItem`: deliverable rendering, strikethrough styling upon completion, priority tags, and toggle/delete interactions.
+  - `TaskItem`: deliverable rendering, strikethrough styling upon completion, priority tags, and accessible toggle/delete buttons.
   - `BudgetCategoryCard`: allocated vs spent displays, inline edit mode toggle, numeric inputs, and save/cancel actions.
-  - `VendorCard`: booking status selection dropdown, contact info display, and status update callbacks.
+  - `VendorCard`: booking status selection dropdown with connected labels, contact info display, and status update callbacks.
   - `IdeaCard`: concept title, copy-to-clipboard, "Add to Plan" callback, "In Plan" disabled state, and favorite bookmark toggle.
-- **Frontend API Client (`src/test/api.test.js`)**:
+- **Modal Dialog Accessibility (`src/test/Modal.test.jsx` — 7 tests)**:
+  - `role="dialog"` and `aria-modal="true"` markup verification.
+  - Accessible `aria-labelledby` and `aria-describedby` linking.
+  - Keyboard accessibility: closes on `Escape` key press.
+  - Focus management: automatically shifts focus into interactive elements inside the dialog upon opening.
+  - Backdrop dismissal and click propagation containment.
+  - Accessible close button with `aria-label="Close dialog"`.
+- **Expense Table & Ledger (`src/test/ExpenseTable.test.jsx` — 7 tests)**:
+  - Accessible ledger table with `scope="col"` headers and accessible label.
+  - Search filtering by expense title and payee vendor.
+  - Dropdown filtering by celebration budget category.
+  - Dropdown filtering by payment status (`paid` vs `pending`).
+  - Interactive payment status toggles with descriptive ARIA announcements.
+  - Expense deletion callback and empty state rendering.
+- **Celebration Creation Workflow (`src/test/CreateEventPage.test.jsx` — 4 tests)**:
+  - Form rendering with celebration presets (Wedding, Birthday, Community).
+  - One-click sample template quick-fill verifying automatic field population.
+  - Client-side form validation displaying explicit error messages on empty submissions.
+  - Full creation submission: validates input, updates active celebration state, and redirects smoothly to `/dashboard`.
+- **Frontend API Client (`src/test/api.test.js` — 6 tests)**:
   - Sanitization of `API_BASE_URL` ensuring no trailing slashes.
   - `checkBackendHealth` handling both connected 200 states and offline error fallbacks.
   - `generateEventPlanWithAI` payload construction and descriptive error propagation.
@@ -637,20 +664,27 @@ npm run build
 ============================= pytest backend test session =============================
 platform win32 -- Python 3.14.3, pytest-9.1.1, pluggy-1.7.0
 rootdir: C:\Users\admin\Desktop\Eventora-AI
-collected 26 items
+collected 37 items
 
 backend/tests/test_api_endpoints.py::test_post_generate_plan_valid PASSED            [  3%]
 backend/tests/test_api_endpoints.py::test_post_generate_plan_invalid_input PASSED   [  7%]
 backend/tests/test_api_endpoints.py::test_post_generate_plan_unconfigured_gemini PASSED [ 11%]
 backend/tests/test_api_endpoints.py::test_post_generate_ideas_valid PASSED          [ 15%]
-backend/tests/test_api_endpoints.py::test_cors_headers_present PASSED               [ 19%]
+backend/tests/test_cors_headers_present PASSED               [ 13%]
+backend/tests/test_api_endpoints.py::test_cors_production_and_vercel_preview PASSED [ 16%]
+backend/tests/test_api_endpoints.py::test_unhandled_exception_returns_sanitized_500 PASSED [ 19%]
 backend/tests/test_gemini_service.py::test_get_api_key_valid PASSED                 [ 23%]
 backend/tests/test_gemini_service.py::test_get_api_key_detects_placeholders PASSED  [ 26%]
 backend/tests/test_gemini_service.py::test_get_model_name_default PASSED            [ 30%]
 backend/tests/test_gemini_service.py::test_gemini_service_raises_503_when_unconfigured PASSED [ 34%]
 backend/tests/test_gemini_service.py::test_gemini_service_generate_plan_mocked PASSED [ 38%]
-backend/tests/test_gemini_service.py::test_gemini_service_generate_ideas_mocked PASSED [ 42%]
-backend/tests/test_health.py::test_health_check_returns_200 PASSED                  [ 46%]
+backend/tests/test_gemini_service.py::test_gemini_service_generate_ideas_mocked PASSED [ 36%]
+backend/tests/test_gemini_service.py::test_extract_clean_json_markdown_fences PASSED [ 38%]
+backend/tests/test_gemini_service.py::test_gemini_service_empty_text_raises_502 PASSED [ 41%]
+backend/tests/test_gemini_service.py::test_gemini_service_malformed_json_raises_502 PASSED [ 44%]
+backend/tests/test_gemini_service.py::test_gemini_service_api_error_subtypes PASSED [ 47%]
+backend/tests/test_gemini_service.py::test_sanitize_error_message_redacts_secrets PASSED [ 49%]
+backend/tests/test_health.py::test_health_check_returns_200 PASSED                  [ 51%]
 backend/tests/test_health.py::test_health_check_configured_state PASSED             [ 50%]
 backend/tests/test_health.py::test_health_check_unconfigured_state PASSED           [ 53%]
 backend/tests/test_schemas.py::test_valid_event_plan_request PASSED                 [ 57%]
@@ -660,32 +694,39 @@ backend/tests/test_schemas.py::test_date_validator_strips_whitespace PASSED     
 backend/tests/test_schemas.py::test_budget_boundary_validation PASSED               [ 73%]
 backend/tests/test_schemas.py::test_guest_count_boundary_validation PASSED          [ 76%]
 backend/tests/test_schemas.py::test_generate_ideas_request PASSED                   [ 80%]
-backend/tests/test_schemas.py::test_gemini_component_schemas PASSED                 [ 84%]
-backend/tests/test_timeline_normalization.py::test_normalize_normal_future_tasks PASSED [ 88%]
+backend/tests/test_schemas.py::test_gemini_component_schemas PASSED                 [ 77%]
+backend/tests/test_schemas.py::test_invalid_calendar_dates_rejected PASSED         [ 80%]
+backend/tests/test_schemas.py::test_valid_leap_year_accepted PASSED                 [ 83%]
+backend/tests/test_schemas.py::test_year_range_validation PASSED                    [ 86%]
+backend/tests/test_schemas.py::test_generate_ideas_request_bounds PASSED            [ 88%]
+backend/tests/test_timeline_normalization.py::test_normalize_normal_future_tasks PASSED [ 91%]
 backend/tests/test_timeline_normalization.py::test_normalize_reschedules_past_milestones PASSED [ 92%]
 backend/tests/test_timeline_normalization.py::test_normalize_post_event_tasks PASSED [ 96%]
 backend/tests/test_timeline_normalization.py::test_normalize_preserves_completed_tasks PASSED [100%]
 
-================================= 26 passed in 0.32s ==================================
+================================= 37 passed in 0.13s ==================================
 
 ----------------------------------------------------------------------------------------
 
  RUN  v5.0.5 C:/Users/admin/Desktop/Eventora-AI
 
- ✓ src/test/currency.test.js (8 tests) 10ms
- ✓ src/test/date.test.js (11 tests) 51ms
- ✓ src/test/api.test.js (6 tests) 16ms
- ✓ src/test/EventContext.test.jsx (7 tests) 43ms
- ✓ src/test/components.test.jsx (8 tests) 280ms
+ ✓ src/test/date.test.js (11 tests)
+ ✓ src/test/api.test.js (6 tests)
+ ✓ src/test/EventContext.test.jsx (7 tests)
+ ✓ src/test/Modal.test.jsx (7 tests)
+ ✓ src/test/components.test.jsx (8 tests)
+ ✓ src/test/ExpenseTable.test.jsx (7 tests)
+ ✓ src/test/CreateEventPage.test.jsx (4 tests)
+ ✓ src/test/currency.test.js (8 tests)
 
- Test Files  5 passed (5)
-      Tests  40 passed (40)
-   Duration  2.92s
+ Test Files  8 passed (8)
+      Tests  58 passed (58)
+   Duration  3.40s
 
 ----------------------------------------------------------------------------------------
-TOTAL AUTOMATED TESTS: 66 PASSED / 0 FAILED (100% Pass Rate)
-LINT STATUS: 0 Errors
-BUILD STATUS: 0 Errors (built in 1.50s)
+TOTAL AUTOMATED TESTS: 95 PASSED / 0 FAILED (100% Pass Rate)
+LINT STATUS: 0 Warnings, 0 Errors across 47 files
+BUILD STATUS: 0 Errors (built in 1.65s)
 ```
 
 ---
