@@ -93,20 +93,22 @@ async def health_check():
 
 
 @app.post("/api/generate-plan", response_model=Dict[str, Any])
-async def generate_plan(request: EventPlanRequest):
+def generate_plan(request: EventPlanRequest):
     """
     Generate a full celebration blueprint (budget, timeline, vendors, creative ideas)
     using Google Gemini generative AI.
+    Runs synchronously in FastAPI's worker threadpool to prevent event loop blocking.
     """
     plan = GeminiService.generate_event_plan(request)
     return plan
 
 
 @app.post("/api/generate-ideas", response_model=Dict[str, Any])
-async def generate_ideas(request: GenerateIdeasRequest):
+def generate_ideas(request: GenerateIdeasRequest):
     """
     Synthesize fresh personalized themes, decor, food, and entertainment concepts
     using Google Gemini generative AI.
+    Runs synchronously in FastAPI's worker threadpool to prevent event loop blocking.
     """
     ideas = GeminiService.generate_creative_ideas(request)
     return {"ideas": ideas}

@@ -182,3 +182,13 @@ def test_unhandled_exception_returns_sanitized_500():
         assert "SecretDatabasePasswordFailure" not in data["detail"]
         assert "unexpected server error occurred" in data["detail"]
 
+
+def test_route_handlers_are_sync_threadpool_functions():
+    """Verify generate-plan and generate-ideas endpoints are sync def (not coroutines) to prevent event loop blocking."""
+    import inspect
+    from main import generate_plan, generate_ideas
+
+    assert not inspect.iscoroutinefunction(generate_plan), "generate_plan must be synchronous for worker threadpool execution"
+    assert not inspect.iscoroutinefunction(generate_ideas), "generate_ideas must be synchronous for worker threadpool execution"
+
+

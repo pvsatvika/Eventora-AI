@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 import { useEvents } from '../context/EventContext';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
